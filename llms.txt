@@ -1,0 +1,28 @@
+# NitroFusion2: Bringing Adversarial Loss to the Text Stream of Multimodal Diffusion Transformers
+
+> NitroFusion2 is a 1–2 step text-to-image model built on Z-Image-Turbo, by Dar-Yen Chen and Yi-Zhe Song (2026). It applies an adversarial loss to the text stream of a multimodal diffusion transformer (MMDiT): mid-network text tokens have already read the image, so they serve as a discriminative representation. It produces fine detail in one or two steps.
+
+- Text-Stream Adversarial Distillation (TSAD): uses intermediate text-token states of a frozen MMDiT discriminator as the adversarial representation, alongside image features.
+- Aspect-Cued Discrimination (ACD): swapping the text condition (typography, objects, style, ...) steers which aspects the discriminator emphasises, with one backbone and no extra cost.
+- Brings few-step distillation from 4–8 steps down to 1–2 steps at comparable quality; builds on NitroFusion (CVPR 2025).
+- Released: bf16 weights, GGUF tiers (2.0–7.2 GB), a de-distillation LoRA for 2-step sampling, ComfyUI workflows, diffusers code, and an online demo. License: Apache-2.0.
+
+## Links
+
+- [Project page](https://chendaryen.github.io/NitroFusion2.github.io/)
+- [GitHub repo](https://github.com/ChenDarYen/NitroFusion2): inference script, ComfyUI workflows
+- [Weights (Hugging Face)](https://huggingface.co/ChenDY/NitroFusion2)
+- [Demo (Hugging Face Space)](https://huggingface.co/spaces/ChenDY/NitroFusion2)
+- Paper: coming soon
+
+## Citation
+
+```bib
+@misc{chen2026nitrofusion2,
+  title={NitroFusion2: Bringing Adversarial Loss to the Text Stream of Multimodal Diffusion Transformers},
+  author={Dar-Yen Chen and Yi-Zhe Song},
+  year={2026},
+  howpublished={\url{https://github.com/ChenDarYen/NitroFusion2}},
+  note={Paper coming soon}
+}
+```
