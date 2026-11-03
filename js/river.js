@@ -1,10 +1,6 @@
 (function() {
   "use strict";
-  var V = {
-    near: 25,
-    mid: 15,
-    far: 10
-  };
+  var V = {};
   var BREATH = {
     FLOW: 40,
     EASE: 3,
@@ -13,38 +9,145 @@
     OPEN: -3
   };
   var LANES = [ "near", "mid", "far" ];
-  var S0 = {
-    near: 340,
-    mid: 220,
-    far: 180
-  };
-  var CY = {
-    near: 380,
-    mid: 570,
-    far: 170
-  };
   var MOD = [ 1, .88, 1.06, .92, .97, 1.03 ];
-  var GAP = {
-    near: [ 120, 220, 160, 280 ],
-    mid: [ 90, 170, 120, 210 ],
-    far: [ 80, 150, 110, 190 ]
-  };
   var JIT = {
     near: [ 0, -26, 18, -12, 26, -8 ],
     mid: [ -10, 14, -18, 6, 20, -14 ],
     far: [ 12, -10, 20, -16, 4, -20 ]
   };
-  var STILL_X = {
-    mid: 640,
-    far: 760
+  var FEAT_CAP = 2;
+  var DESK = {
+    S0: {
+      near: 340,
+      mid: 220,
+      far: 180
+    },
+    CY: {
+      near: 380,
+      mid: 570,
+      far: 170
+    },
+    GAP: {
+      near: [ 120, 220, 160, 280 ],
+      mid: [ 90, 170, 120, 210 ],
+      far: [ 80, 150, 110, 190 ]
+    },
+    STILL: {
+      mid: 640,
+      far: 760
+    },
+    INSET: 24,
+    W: 2e3,
+    H: 760,
+    LANES: [ "near", "mid", "far" ]
   };
-  var FEAT_CAP = 2, INSET = 24, STAGE_W = 2e3, STAGE_H = 760;
   var PHONE = {
-    stageW: 640,
-    stageH: 520,
-    cy: 260,
-    v: 20
+    S0: {
+      near: 260,
+      mid: 170
+    },
+    CY: {
+      near: 345,
+      mid: 155
+    },
+    GAP: {
+      near: [ 70, 100, 85, 110 ],
+      mid: [ 40, 60, 50, 70 ]
+    },
+    STILL: {
+      mid: 160
+    },
+    INSET: 16,
+    W: 640,
+    H: 600,
+    LANES: [ "near", "mid" ]
   };
+  var BANDS = {
+    desktop: {
+      px: {
+        near: 25,
+        mid: 15,
+        far: 10
+      },
+      br: [ 40, 3, 8, .3 ],
+      A: {
+        near: 22,
+        mid: 16,
+        far: 12
+      },
+      tmax: 6,
+      cap: 3,
+      every: [ 7, 12 ],
+      hero: 330
+    },
+    tabletLand: {
+      px: {
+        near: 28,
+        mid: 17,
+        far: 11
+      },
+      br: [ 36, 3, 6, .35 ],
+      A: {
+        near: 22,
+        mid: 16,
+        far: 12
+      },
+      tmax: 6,
+      cap: 3,
+      every: [ 7, 12 ],
+      hero: 330
+    },
+    tablet: {
+      px: {
+        near: 32,
+        mid: 19,
+        far: 13
+      },
+      br: [ 32, 3, 5, .4 ],
+      A: {
+        near: 18,
+        mid: 13,
+        far: 10
+      },
+      tmax: 5,
+      cap: 2,
+      every: [ 7, 12 ],
+      hero: 330
+    },
+    phone: {
+      px: {
+        near: 44,
+        mid: 26
+      },
+      br: [ 24, 2, 3, .5 ],
+      A: {
+        near: 10,
+        mid: 8
+      },
+      tmax: 3.5,
+      cap: 1,
+      every: [ 6, 2 ],
+      hero: 200
+    },
+    shortLand: {
+      px: {
+        near: 36,
+        mid: 22,
+        far: 14
+      },
+      br: [ 24, 2, 3, .5 ],
+      A: {
+        near: 12,
+        mid: 9,
+        far: 7
+      },
+      tmax: 4,
+      cap: 2,
+      every: [ 7, 12 ],
+      hero: 330
+    }
+  };
+  var S0, CY, GAP, STILL_X, INSET, STAGE_W, STAGE_H, BUILT, WINS_B, band, P;
   var LEADERS = [ "house", "frog", "woman" ];
   var TAIL_N = 6;
   var LEAD_MARGIN = 400;
@@ -88,10 +191,9 @@
   }
   var SLICE_F = .3, W_SLICE = 4;
   var WINS = [ [ 0, WIN_U, 240 ], [ 200, 1200, 150 ] ];
-  var WINS_PHONE = [ [ -200, 640, 80 ] ];
+  var WINS_PHONE = [ [ -200, 640, 60 ] ];
   function sliceCost(cards, L, opa, x0, wins) {
     var tot = 0, i, c, k, a, b, lo, hi, off, stub, q, x, win, hide;
-    wins = wins || WINS;
     for (q = 0; q < wins.length; q++) {
       x = x0 + wins[q][0];
       win = wins[q][1];
@@ -138,7 +240,40 @@
   if (!river || !node) return;
   var MANIFEST = JSON.parse(node.textContent);
   var reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
-  var phoneQ = window.matchMedia("(max-width: 767px)");
+  var Q = {
+    shortLand: window.matchMedia("(max-height: 480px) and (min-width: 600px)"),
+    phone: window.matchMedia("(max-width: 599px)"),
+    tablet: window.matchMedia("(max-width: 899px)"),
+    tabletLand: window.matchMedia("(max-width: 1199px)")
+  };
+  function bandOf() {
+    for (var k in Q) if (Q[k].matches) return k;
+    return "desktop";
+  }
+  function setBand(name) {
+    var g = name === "phone" ? PHONE : DESK;
+    band = name;
+    P = BANDS[name];
+    S0 = g.S0;
+    CY = g.CY;
+    GAP = g.GAP;
+    STILL_X = g.STILL;
+    INSET = g.INSET;
+    STAGE_W = g.W;
+    STAGE_H = g.H;
+    BUILT = g.LANES;
+    WINS_B = name === "phone" ? WINS_PHONE : WINS;
+    BREATH.FLOW = P.br[0];
+    BREATH.EASE = P.br[1];
+    BREATH.REST = P.br[2];
+    BREATH.SLOW = P.br[3];
+    BEND.A = P.A;
+    BEND.BASE = 2 * STAGE_W;
+    BEND.JIT_MUL = name === "phone" ? .5 : .15;
+    GILD.CAP = P.cap;
+    GILD.EVERY = P.every;
+    GILD.HERO_WIN = P.hero;
+  }
   var seed = Math.random() * 4294967296 >>> 0;
   window.RIVER_SEED = seed;
   function rng() {
@@ -235,7 +370,7 @@
       mid: 16,
       far: 12
     },
-    BASE: 2 * STAGE_W,
+    BASE: 4e3,
     M: {
       near: [ 1, 1.5, 2.5 ],
       mid: [ 1, 2, 3 ],
@@ -302,90 +437,65 @@
     fig.th += fig.w * dt;
     return fig.th;
   }
-  function cycleLen() {
-    return BREATH.REST + 2 * BREATH.EASE + BREATH.FLOW;
-  }
-  function eff(S) {
-    var f = BREATH.SLOW;
-    return f * cycleLen() + (1 - f) * S;
-  }
-  function unEff(Se) {
-    var f = BREATH.SLOW;
-    return (Se - f * cycleLen()) / (1 - f);
-  }
-  function breath(L, v) {
-    var B = cycleLen(), E = BREATH.EASE;
-    var Snom = BREATH.FLOW + E;
-    var best = null, n0 = Math.max(1, Math.round(L / (v * eff(Snom)))), i, N, S, rest;
-    for (i = -3; i <= 3; i++) {
-      N = n0 + i;
-      if (N < 1) continue;
-      S = unEff(L / (N * v));
-      rest = B - E - S;
-      if (rest < 3 || rest > 2 * BREATH.REST) continue;
-      var sc = Math.abs(rest - BREATH.REST);
-      if (!best || sc < best.sc - 1.5 || sc < best.sc + 1.5 && rest > best.rest) {
-        best = {
-          N: N,
-          S: S,
-          flow: S - E,
-          rest: rest,
-          sc: sc
-        };
+  function breath(L, v0) {
+    var f = BREATH.SLOW, R = BREATH.REST, E = BREATH.EASE, F = BREATH.FLOW, K = f * R + E * (1 + f);
+    function cand(N) {
+      var D = L / N, v = v0, flow = D / v - K;
+      if (flow < .7 * F || flow > 1.4 * F) {
+        v = Math.max(.88 * v0, Math.min(1.12 * v0, D / (K + F)));
+        flow = D / v - K;
       }
-    }
-    if (!best) {
-      N = n0;
-      S = unEff(L / (N * v));
-      best = {
+      return {
         N: N,
-        S: S,
-        flow: S - E,
-        rest: Math.max(0, B - E - S)
+        D: D,
+        v: v,
+        flow: flow,
+        rest: R
       };
     }
-    best.dur = best.N * B;
-    best.delay = BREATH.OPEN - best.rest;
-    best.D = L / best.N;
+    function ok(c) {
+      return c.flow >= .7 * F && c.flow <= 1.4 * F;
+    }
+    var N0 = Math.max(1, Math.round(L / (v0 * (K + F)))), best = cand(N0);
+    if (!ok(best)) {
+      [ N0 - 1, N0 + 1 ].forEach((function(N) {
+        if (N < 1) return;
+        var c = cand(N);
+        if (c.flow >= .5 * F && (best.flow < .5 * F || Math.abs(c.flow - F) < Math.abs(best.flow - F))) best = c;
+      }));
+      if (best.flow < .5 * F) {
+        best.flow = .5 * F;
+        best.v = best.D / (K + best.flow);
+      }
+    }
+    best.B = R + 2 * E + best.flow;
+    best.dur = best.N * best.B;
     return best;
   }
-  function easePair(f) {
-    var a = 2 * f / (1 + f), b = 2 / (1 + f);
-    return {
-      in: "cubic-bezier(.4," + (a * .4).toFixed(4) + ",.75," + (1 - b * .25).toFixed(4) + ")",
-      out: "cubic-bezier(.25," + (b * .25).toFixed(4) + ",.6," + (1 - a * .4).toFixed(4) + ")"
-    };
+  function posAt(d, t) {
+    var b = d.breath, B = b.B, E = BREATH.EASE, f = BREATH.SLOW, v = b.v;
+    var NB = b.N * B, k = Math.floor(t / NB), tp = t - k * NB;
+    var c = Math.min(b.N - 1, Math.floor(tp / B)), tau = tp - c * B, x = k * d.L + c * b.D;
+    var ds = f * v * b.rest, de = .5 * v * E * (1 + f), s;
+    if (tau < b.rest) return x + f * v * tau;
+    s = tau - b.rest;
+    if (s < E) return x + ds + v * (f * s + (1 - f) * s * s / (2 * E));
+    s -= E;
+    if (s < b.flow) return x + ds + de + v * s;
+    s -= b.flow;
+    return x + ds + de + v * b.flow + v * (s - (1 - f) * s * s / (2 * E));
   }
-  function keyframes(name, L, phase, v, b) {
-    var B = cycleLen(), E = BREATH.EASE, f = BREATH.SLOW;
-    var ez = easePair(f);
-    var ds = f * v * b.rest;
-    var de = .5 * v * E * (1 + f);
-    var out = [], c, d;
-    function at(t, dist, tf) {
-      out.push((t / b.dur * 100).toFixed(6) + "%{transform:translateX(calc((var(--phase) - var(--L) + " + dist.toFixed(3) + ") * var(--u)));animation-timing-function:" + tf + "}");
-    }
-    for (c = 0; c < b.N; c++) {
-      d = c * b.D;
-      at(c * B, d, "linear");
-      at(c * B + b.rest, d + ds, ez.in);
-      at(c * B + b.rest + E, d + ds + de, "linear");
-      at(c * B + b.rest + E + b.flow, d + ds + de + v * b.flow, ez.out);
-    }
-    at(b.N * B, L, "linear");
-    return "@keyframes " + name + "{" + out.join("") + "}";
-  }
-  function layout(phone) {
-    var stageH = phone ? PHONE.stageH : STAGE_H;
-    var stageW = phone ? PHONE.stageW : STAGE_W;
+  function layout() {
+    var phone = band === "phone";
+    var stageH = STAGE_H;
+    var stageW = STAGE_W;
     var cx = stageW / 2;
-    var cover = phone ? 1100 : 3e3;
     var lanes = {
       near: [],
       mid: [],
       far: []
     };
-    var capNear = Math.ceil(MANIFEST.length / 3);
+    var capNear = Math.ceil(MANIFEST.length / BUILT.length);
     function count(k) {
       return lanes[k].length;
     }
@@ -395,7 +505,7 @@
       return n;
     }
     function emptier() {
-      return count("mid") <= count("far") ? "mid" : "far";
+      return phone || count("mid") <= count("far") ? "mid" : "far";
     }
     MANIFEST.forEach((function(m) {
       var k;
@@ -406,15 +516,15 @@
             return c.family === "panorama";
           })).length;
         }));
-        k = np.mid < np.far ? "mid" : np.far < np.mid ? "far" : emptier();
+        k = phone || np.mid < np.far ? "mid" : np.far < np.mid ? "far" : emptier();
       } else if (count("near") < capNear) {
         k = "near";
       } else {
         k = emptier();
       }
       if (m.featured && nfeat(k) >= FEAT_CAP) {
-        k = LANES.slice().sort((function(a, b) {
-          return nfeat(a) - nfeat(b) || count(a) - count(b) || LANES.indexOf(a) - LANES.indexOf(b);
+        k = BUILT.slice().sort((function(a, b) {
+          return nfeat(a) - nfeat(b) || count(a) - count(b) || BUILT.indexOf(a) - BUILT.indexOf(b);
         }))[0];
       }
       lanes[k].push({
@@ -454,7 +564,7 @@
       if (found) lanes.near.unshift(found);
     }));
     var out = {};
-    var built = phone ? [ "near" ] : LANES;
+    var built = BUILT;
     function geom(c, k, j, mul) {
       var s = S0[k] * MOD[j % 6] * (mul || 1);
       c.lane = k;
@@ -462,7 +572,7 @@
       c.leaf = leafN++;
       c.w = Math.round(s * Math.sqrt(c.aspect));
       c.h = Math.round(s / Math.sqrt(c.aspect));
-      var cy = (phone ? PHONE.cy : CY[k]) + JIT[k][j % 6] * BEND.JIT_MUL;
+      var cy = CY[k] + JIT[k][j % 6] * BEND.JIT_MUL;
       c.y = Math.max(INSET, Math.min(stageH - INSET - c.h, Math.round(cy - c.h / 2)));
     }
     built.forEach((function(k) {
@@ -493,7 +603,9 @@
         }));
         if (L3.length === LEADERS.length) {
           if (phone) {
-            var lead1 = L3[L3.length - 1];
+            var lead1 = L3.filter((function(c) {
+              return c.featured;
+            })).pop() || L3[L3.length - 1];
             phaseHead = cx - (lead1.xHead + lead1.w / 2);
           } else {
             phaseHead = cx - (L3[0].xHead + L3[L3.length - 1].xHead + L3[L3.length - 1].w) / 2;
@@ -510,7 +622,7 @@
         phaseHead = STILL_X[k];
       }
       var LEAD_U = phaseHead + LEAD_MARGIN;
-      var vk = phone ? PHONE.v : V[k];
+      var vk = V[k];
       var opa = OPA[k];
       var anch = head.map((function(c) {
         return c.lum * c.w * c.h;
@@ -604,7 +716,7 @@
           for (c = 0; c < bb.N; c++) {
             var rx = restX(dl.L, ph, bb.D, c);
             own.push(windowMass(seqT, dl.L, stageH, opa, rx));
-            slice += sliceCost(seqT, dl.L, opa, rx, phone ? WINS_PHONE : WINS) / bb.N;
+            slice += sliceCost(seqT, dl.L, opa, rx, WINS_B) / bb.N;
           }
           for (q = 0; q < LANES.length; q++) if (out[LANES[q]]) R = lcm(R, out[LANES[q]].breath.N);
           R = Math.min(R, 180);
@@ -637,7 +749,6 @@
       Llen = xr;
       var phase = phaseHead - leadLen;
       var phaseN = phase - Llen * Math.ceil(phase / Llen);
-      var copies = Math.ceil((cover - phaseN + Llen) / Llen);
       seq.forEach((function(c) {
         c.xStill = Math.round(c.x0 + phase);
       }));
@@ -650,14 +761,11 @@
         phase: phaseN,
         phaseRaw: phase,
         restMass: rm,
-        copies: copies,
         headLen: headLen,
         leadLen: leadLen,
         heads: best.lead + n,
         v: vk,
-        T: b.dur,
-        breath: b,
-        kf: keyframes("flow-" + k, Llen, phaseN, vk, b)
+        breath: b
       };
     }));
     return out;
@@ -672,7 +780,6 @@
     EVERY: [ 7, 12 ],
     HERO_WIN: 330,
     CAP: 3,
-    CAP_PHONE: 2,
     TIERS: [ [ .55, "full" ], [ .85, "half" ], [ 1, "faint" ] ],
     ENV: {
       full: {
@@ -715,11 +822,11 @@
       return v;
     };
   }
-  function xAtRest(d, c, copy, n) {
-    return c.x0 + copy * d.L + d.phase - d.L + n % d.breath.N * d.breath.D;
+  function wrapX(d, x) {
+    return d.lo + ((x - d.lo) % d.L + d.L) % d.L;
   }
-  function scheduler(data, phone, openSet, live) {
-    var cap = phone ? GILD.CAP_PHONE : GILD.CAP;
+  function scheduler(data, openSet, live) {
+    var cap = GILD.CAP;
     var hero = leafRun(), dark = 0, n = 0;
     return function next() {
       var R = river.getBoundingClientRect();
@@ -814,9 +921,9 @@
       };
     };
   }
-  var gildTimer = null, alive = [], bendRAF = 0;
-  function gild(data, phone, openSet) {
-    var next = scheduler(data, phone, openSet, (function() {
+  var gildTimer = null, alive = [];
+  function gild(data, openSet) {
+    var next = scheduler(data, openSet, (function() {
       return alive.length;
     }));
     var T0 = (window.performance && performance.now ? performance.now() : Date.now()) / 1e3;
@@ -832,6 +939,13 @@
       gildTimer = null;
     }
     alive = [];
+    if (reduce.matches) {
+      var old = river.querySelectorAll(".gild"), q;
+      for (q = 0; q < old.length; q++) {
+        old[q].parentNode.classList.remove("is-leaf");
+        old[q].remove();
+      }
+    }
     function fire(step) {
       var now = (window.performance && performance.now ? performance.now() : Date.now()) / 1e3 - T0;
       step.lit.forEach((function(e) {
@@ -866,29 +980,31 @@
         };
         alive.push(mine);
         log.push(mine);
+        g.appendChild(wedge);
+        fig.classList.add("is-leaf");
+        fig.insertBefore(g, fig.firstChild);
+        if (reduce.matches) {
+          g.style.transition = "opacity 400ms ease-out";
+          void g.offsetWidth;
+          g.style.opacity = env.I;
+          return;
+        }
         wedge.style.animationName = dir > 0 ? "gild-sweep-cw" : "gild-sweep-ccw";
         wedge.style.animationDuration = dur.toFixed(2) + "s";
         wedge.style.animationIterationCount = "infinite";
         wedge.style.animationTimingFunction = "linear";
-        wedge.style.animationDelay = (reduce.matches ? 0 : -ph).toFixed(2) + "s";
-        g.appendChild(wedge);
+        wedge.style.animationDelay = (-ph).toFixed(2) + "s";
         g.style.animationName = "gild-" + e.tier;
         g.style.animationDuration = life + "s";
         g.style.animationFillMode = "both";
-        g.style.animationDelay = (reduce.matches ? -env.bloom : bloom - now).toFixed(3) + "s";
-        if (reduce.matches) {
-          g.style.animationPlayState = "paused";
-          wedge.style.animationPlayState = "paused";
-        } else {
-          g.addEventListener("animationend", (function() {
-            g.remove();
-            fig.classList.remove("is-leaf");
-            var at = alive.indexOf(mine);
-            if (at >= 0) alive.splice(at, 1);
-          }));
-        }
-        fig.classList.add("is-leaf");
-        fig.insertBefore(g, fig.firstChild);
+        g.style.animationDelay = (bloom - now).toFixed(3) + "s";
+        g.addEventListener("animationend", (function(ev) {
+          if (ev.target !== g) return;
+          g.remove();
+          fig.classList.remove("is-leaf");
+          var at = alive.indexOf(mine);
+          if (at >= 0) alive.splice(at, 1);
+        }));
       }));
     }
     fire(next());
@@ -909,7 +1025,7 @@
     el.srcset = widths.map((function(w) {
       return "assets/img/" + c.name + "-" + w + ".webp " + w + "w";
     })).join(", ");
-    el.sizes = "(max-width: 767px) 60vw, 25vw";
+    el.sizes = "(max-width: 599px) 46vw, (max-width: 899px) 30vw, (max-width: 1199px) 24vw, 22vw";
     el.width = Math.round(c.w);
     el.height = Math.round(c.h);
     el.alt = first && c.speaks ? c.alt : "";
@@ -917,36 +1033,168 @@
     el.loading = first && c.eager ? "eager" : "lazy";
     return el;
   }
+  var data = null, fields = {}, U = 1, vis = null, clock = 0, lastNow = 0, raf = 0, inView = false;
+  var dragPx = 0, drag = null, inertia = 0, lastRaw = {}, carried = {};
+  var DRIFT = [ 725, 1075, 1675 ];
+  function measure() {
+    var r = river.getBoundingClientRect(), k, d, need = 0;
+    U = r.height / STAGE_H;
+    var w = r.width / U;
+    vis = {
+      l: STAGE_W / 2 - w / 2,
+      r: STAGE_W / 2 + w / 2
+    };
+    for (k in data) {
+      d = data[k];
+      d.breath = breath(d.L, P.px[k] / U);
+      d.v = d.breath.v;
+      d.ratio = P.px[k] / P.px.near;
+      d.lo = Math.min(d.phase, vis.l) - d.L;
+      need = Math.max(need, Math.ceil((vis.r - d.lo + 200) / d.L) - (d.copies || 1e9));
+    }
+    return need > 0;
+  }
+  function openSet() {
+    var cand = [], open = [];
+    BUILT.forEach((function(k) {
+      var d = data[k];
+      if (!d) return;
+      var base = reduce.matches ? d.x : wrapX(d, d.phase - d.L);
+      d.cards.forEach((function(c) {
+        if (!c.featured) return;
+        for (var cp = 0; cp < d.copies; cp++) {
+          var x = c.x0 + cp * d.L + base;
+          if (x < Math.max(0, vis.l) || x + c.w > Math.min(STAGE_W, vis.r)) continue;
+          cand.push({
+            name: c.name,
+            lane: k,
+            copy: cp,
+            rank: BUILT.indexOf(k),
+            dist: Math.abs(x + c.w / 2 - STAGE_W / 2)
+          });
+        }
+      }));
+    }));
+    cand.sort((function(a, b) {
+      return a.rank - b.rank || a.dist - b.dist;
+    }));
+    if (reduce.matches && cand.length) {
+      var hi = 0;
+      cand.forEach((function(e, i) {
+        if (e.dist < cand[hi].dist || e.dist === cand[hi].dist && e.rank < cand[hi].rank) hi = i;
+      }));
+      cand.unshift(cand.splice(hi, 1)[0]);
+    }
+    [ "full", "half", "faint" ].slice(0, GILD.CAP).forEach((function(t, i) {
+      if (cand[i]) open.push([ cand[i].name, cand[i].lane, cand[i].copy, t ]);
+    }));
+    return open;
+  }
+  function render(dt) {
+    var still = reduce.matches, speed = {}, i, j, cp, k, d, c, fig, raw, vel, x, s, f, sx, tm = still ? 0 : P.tmax;
+    for (i = 0; i < BUILT.length; i++) {
+      k = BUILT[i];
+      d = data[k];
+      if (!d) continue;
+      raw = d.phase - d.L + (still ? 0 : posAt(d, clock + d.breath.rest + BREATH.EASE + 1)) + dragPx / U * d.ratio;
+      vel = lastRaw[k] === undefined ? 0 : (raw - lastRaw[k]) / dt;
+      lastRaw[k] = raw;
+      speed[k] = Math.abs(vel) * U;
+      if (!still) carried[k] = (carried[k] || 0) + Math.abs(vel) * dt;
+      s = carried[k] || 0;
+      x = wrapX(d, raw);
+      d.x = x;
+      d.el.style.transform = "translate3d(" + (x * U).toFixed(2) + "px,0,0)";
+      f = fields[k];
+      for (j = 0; j < d.cards.length; j++) {
+        c = d.cards[j];
+        for (cp = 0; cp < d.copies; cp++) {
+          fig = c.figs[cp];
+          sx = c.x0 + cp * d.L + x + c.w / 2;
+          if (sx + 1.5 * c.w < vis.l || sx - 1.5 * c.w > vis.r) {
+            if (fig.bent) {
+              fig.style.transform = "";
+              fig.bent = 0;
+            }
+            continue;
+          }
+          var deg = 0;
+          if (tm) {
+            deg = Math.max(-tm, Math.min(tm, leafStep(fig, c, s, Math.min(.05, dt), f(sx, s, 1), f(sx, s, 2), vel)));
+            fig.th = deg;
+          }
+          fig.style.transform = "translateY(" + (f(sx, s) * U).toFixed(2) + "px) rotate(" + deg.toFixed(3) + "deg)";
+          fig.bent = 1;
+        }
+      }
+    }
+    window.RIVER_SPEED = speed;
+  }
+  function live() {
+    return inView && !document.hidden && (!reduce.matches || !!drag && drag.on || !!inertia);
+  }
+  function tick(now) {
+    now /= 1e3;
+    var dt = lastNow ? Math.min(1, Math.max(.001, now - lastNow)) : 1 / 60;
+    lastNow = now;
+    if (inertia) {
+      dragPx += inertia * .35 * (1 - Math.exp(-dt / .35));
+      inertia *= Math.exp(-dt / .35);
+      if (Math.abs(inertia) < 2) {
+        inertia = 0;
+        if (reduce.matches) gild(data, openSet());
+      }
+    } else if (!(drag && drag.on) && !reduce.matches) clock += dt;
+    render(dt);
+    raf = live() ? requestAnimationFrame(tick) : 0;
+    if (!raf) lastNow = 0;
+  }
+  function kick() {
+    if (raf && !live()) {
+      cancelAnimationFrame(raf);
+      raf = 0;
+      lastNow = 0;
+    } else if (data && !raf && live()) raf = requestAnimationFrame(tick);
+  }
   function build() {
-    var phone = phoneQ.matches;
-    var data = layout(phone);
+    setBand(bandOf());
+    var r0 = river.getBoundingClientRect();
+    U = r0.height / STAGE_H;
+    BUILT.forEach((function(k) {
+      V[k] = P.px[k] / U;
+    }));
+    data = layout();
+    if (raf) cancelAnimationFrame(raf);
+    raf = 0;
+    lastNow = 0;
+    clock = 0;
+    dragPx = 0;
+    drag = null;
+    inertia = 0;
+    lastRaw = {};
+    carried = {};
+    measure();
     var old = river.querySelectorAll(".lane");
     var i;
     for (i = 0; i < old.length; i++) old[i].remove();
+    river.setAttribute("data-band", band);
     var veilL = river.querySelector(".veil--l");
-    var made = [], kfs = [];
-    var sheet = document.getElementById("river-breath");
+    var made = [];
+    var sheet = document.getElementById("river-gild");
     if (!sheet) {
       sheet = document.createElement("style");
-      sheet.id = "river-breath";
+      sheet.id = "river-gild";
       document.head.appendChild(sheet);
     }
-    LANES.forEach((function(k) {
-      if (data[k]) kfs.push(data[k].kf);
-    }));
-    kfs.push(envKeyframes());
-    sheet.textContent = kfs.join("\n");
-    LANES.forEach((function(k) {
+    sheet.textContent = envKeyframes();
+    BUILT.forEach((function(k) {
       var d = data[k];
       if (!d) return;
+      d.copies = Math.ceil((vis.r - d.lo + 200) / d.L);
       var lane = document.createElement("div");
       lane.className = "lane lane--" + k + " is-enter";
       lane.style.setProperty("--L", d.L);
-      lane.style.setProperty("--v", d.v);
-      lane.style.setProperty("--phase", d.phase);
-      lane.style.setProperty("--kf", "flow-" + k);
-      lane.style.setProperty("--T", d.T);
-      lane.style.setProperty("--delay", d.breath.delay);
+      d.el = lane;
       for (var copy = 0; copy < d.copies; copy++) {
         var strip = document.createElement("div");
         strip.className = "strip";
@@ -969,6 +1217,10 @@
       river.insertBefore(lane, veilL);
       made.push(lane);
     }));
+    window.RIVER_LAYOUT = data;
+    fields = {};
+    for (var k in data) fields[k] = bendField(k, BEND.BASE, DRIFT);
+    render(1 / 60);
     requestAnimationFrame((function() {
       made.forEach((function(lane, idx) {
         var delay = reduce.matches ? 0 : idx * 150;
@@ -977,142 +1229,95 @@
         }), delay);
       }));
     }));
-    var open = [], cand = [];
-    LANES.forEach((function(k) {
-      var d = data[k];
-      if (!d) return;
-      d.cards.forEach((function(c, j) {
-        if (!c.featured) return;
-        for (var cp = 0; cp < d.copies; cp++) {
-          var x = xAtRest(d, c, cp, 0), sw = phone ? PHONE.stageW : STAGE_W;
-          if (x < 0 || x + c.w > sw) continue;
-          cand.push({
-            name: c.name,
-            lane: k,
-            copy: cp,
-            rank: LANES.indexOf(k),
-            dist: Math.abs(x + c.w / 2 - sw / 2)
-          });
-        }
-      }));
-    }));
-    cand.sort((function(a, b) {
-      return a.rank - b.rank || a.dist - b.dist;
-    }));
-    [ "full", "half", "faint" ].forEach((function(t, i) {
-      if (cand[i]) open.push([ cand[i].name, cand[i].lane, cand[i].copy, t ]);
-    }));
-    gild(data, phone, open);
-    window.RIVER_LAYOUT = data;
-    var DRIFT = [ 725, 1075, 1675 ];
-    var fields = {}, k;
-    for (k in data) if (data[k]) fields[k] = bendField(k, phone ? 2 * PHONE.stageW : BEND.BASE, DRIFT);
-    var probe = null;
-    var T0b = (window.performance && performance.now ? performance.now() : Date.now()) / 1e3;
-    if (bendRAF) cancelAnimationFrame(bendRAF);
-    var lastT = 0, lastTx = {}, carried = {};
-    function bendTick() {
-      var t = (window.performance && performance.now ? performance.now() : Date.now()) / 1e3 - T0b;
-      var dt = Math.min(.05, Math.max(.001, t - lastT));
-      lastT = t;
-      var speed = {};
-      var i, j, cp, kk, d, c, fig, u = 0, tx = {}, lane;
-      for (i = 0; i < LANES.length; i++) {
-        kk = LANES[i];
-        d = data[kk];
-        if (!d) continue;
-        lane = river.querySelector(".lane--" + kk);
-        if (!lane) continue;
-        if (!probe) probe = {
-          fig: d.cards[0].figs[0],
-          w: d.cards[0].w
-        };
-        var m = getComputedStyle(lane).transform;
-        var mm = /matrix\(([^)]+)\)/.exec(m);
-        tx[kk] = mm ? parseFloat(mm[1].split(",")[4]) : 0;
-      }
-      if (probe) u = probe.fig.getBoundingClientRect().width / probe.w;
-      for (i = 0; i < LANES.length; i++) {
-        kk = LANES[i];
-        if (!(kk in tx) || !u) continue;
-        speed[kk] = lastTx[kk] === undefined ? 0 : Math.abs(tx[kk] - lastTx[kk]) / u / dt;
-        if (speed[kk] > 200) speed[kk] = 0;
-        carried[kk] = (carried[kk] || 0) + speed[kk] * dt;
-        lastTx[kk] = tx[kk];
-      }
-      window.RIVER_SPEED = speed;
-      if (!u) {
-        bendRAF = requestAnimationFrame(bendTick);
+    gild(data, openSet());
+    kick();
+  }
+  function onDown(e) {
+    if (e.pointerType === "mouse" || drag || !data) return;
+    drag = {
+      id: e.pointerId,
+      x: e.clientX,
+      y: e.clientY,
+      base: dragPx,
+      on: false,
+      hist: []
+    };
+  }
+  function onMove(e) {
+    if (!drag || e.pointerId !== drag.id) return;
+    var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+    if (!drag.on) {
+      if (dx * dx + dy * dy < 64) return;
+      if (Math.abs(dx) <= Math.abs(dy)) {
+        drag = null;
         return;
       }
-      var sw = phone ? PHONE.stageW : STAGE_W;
-      for (i = 0; i < LANES.length; i++) {
-        kk = LANES[i];
-        d = data[kk];
-        if (!d || !(kk in tx)) continue;
-        var f = fields[kk];
-        for (j = 0; j < d.cards.length; j++) {
-          c = d.cards[j];
-          for (cp = 0; cp < d.copies; cp++) {
-            fig = c.figs && c.figs[cp];
-            if (!fig) continue;
-            var sx = c.x0 + cp * d.L + tx[kk] / u + c.w / 2;
-            var s = carried[kk] || 0;
-            if (sx + c.w < -200 || sx - c.w > sw + 200) {
-              if (fig.bent) {
-                fig.style.transform = "";
-                fig.bent = 0;
-              }
-              continue;
-            }
-            var dy = f(sx, s) * u;
-            var deg = leafStep(fig, c, s, dt, f(sx, s, 1), f(sx, s, 2), speed[kk] || 0);
-            fig.style.transform = "translateY(" + dy.toFixed(2) + "px) rotate(" + deg.toFixed(3) + "deg)";
-            fig.bent = 1;
-          }
-        }
+      drag.on = true;
+      inertia = 0;
+      if (river.setPointerCapture) {
+        try {
+          river.setPointerCapture(e.pointerId);
+        } catch (err) {}
       }
-      bendRAF = requestAnimationFrame(bendTick);
+      kick();
     }
-    if (reduce.matches) {
-      requestAnimationFrame((function() {
-        bendTick();
-        cancelAnimationFrame(bendRAF);
-        bendRAF = 0;
-      }));
-    } else {
-      bendRAF = requestAnimationFrame(bendTick);
-    }
+    e.preventDefault();
+    dragPx = drag.base + dx;
+    drag.hist.push([ e.timeStamp, e.clientX ]);
+    while (drag.hist.length > 2 && e.timeStamp - drag.hist[0][0] > 80) drag.hist.shift();
   }
-  var built = false;
-  function start() {
-    if (!built) {
-      built = true;
-      build();
+  function onUp(e) {
+    if (!drag || e.pointerId !== drag.id) return;
+    var h = drag.hist, was = drag.on;
+    drag = null;
+    if (!was) return;
+    var dt = h.length > 1 ? h[h.length - 1][0] - h[0][0] : 0;
+    inertia = e.type === "pointerup" && !reduce.matches && dt > 0 ? (h[h.length - 1][1] - h[0][1]) / dt * 1e3 : 0;
+    if (Math.abs(inertia) < 2) inertia = 0;
+    if (!inertia && reduce.matches) {
+      render(1 / 60);
+      gild(data, openSet());
     }
+    kick();
   }
+  river.addEventListener("pointerdown", onDown);
+  river.addEventListener("pointermove", onMove);
+  river.addEventListener("pointerup", onUp);
+  river.addEventListener("pointercancel", onUp);
   if (window.IntersectionObserver) {
     var io = new IntersectionObserver((function(es) {
       for (var i = 0; i < es.length; i++) if (es[i].isIntersecting) {
         io.disconnect();
-        start();
+        if (!data) build();
         return;
       }
     }), {
       rootMargin: "300px 0px"
     });
     io.observe(river);
-  } else start();
-  var wasPhone = phoneQ.matches;
-  function onChange() {
-    if (!built) {
-      wasPhone = phoneQ.matches;
-      return;
-    }
-    if (phoneQ.matches !== wasPhone) {
-      wasPhone = phoneQ.matches;
-      build();
-    }
+    new IntersectionObserver((function(es) {
+      inView = es[es.length - 1].isIntersecting;
+      kick();
+    }), {
+      rootMargin: "0px"
+    }).observe(river);
+  } else {
+    inView = true;
+    build();
   }
-  if (phoneQ.addEventListener) phoneQ.addEventListener("change", onChange); else window.addEventListener("resize", onChange);
+  document.addEventListener("visibilitychange", kick);
+  var resizeT = 0;
+  function onResize() {
+    clearTimeout(resizeT);
+    resizeT = setTimeout((function() {
+      if (!data) return;
+      if (bandOf() !== band || measure()) return build();
+      render(1 / 60);
+      kick();
+    }), 200);
+  }
+  window.addEventListener("resize", onResize);
+  if (reduce.addEventListener) reduce.addEventListener("change", (function() {
+    if (data) build();
+  }));
 })();

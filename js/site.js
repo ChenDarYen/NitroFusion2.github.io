@@ -1,7 +1,7 @@
 (function() {
   "use strict";
   document.documentElement.classList.add("js");
-  var copy = document.querySelector(".cite .copy");
+  var copy = document.querySelector("#citation .copy");
   var pre = document.querySelector(".cite pre");
   if (copy && pre) {
     copy.addEventListener("click", (function() {
@@ -12,7 +12,7 @@
         }), 1500);
       };
       if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(pre.textContent).then(done, done);
+        navigator.clipboard.writeText(pre.innerText).then(done, done);
       } else {
         var r = document.createRange();
         r.selectNodeContents(pre);
