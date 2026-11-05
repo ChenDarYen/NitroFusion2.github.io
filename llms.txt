@@ -13,16 +13,15 @@
 - [GitHub repo](https://github.com/ChenDarYen/NitroFusion2): inference script, ComfyUI workflows
 - [Weights (Hugging Face)](https://huggingface.co/ChenDY/NitroFusion2)
 - [Demo (Hugging Face Space)](https://huggingface.co/spaces/ChenDY/NitroFusion2)
-- Paper: coming soon
+- [Paper (arXiv:2611.05648)](https://arxiv.org/abs/2611.05648)
 
 ## Citation
 
 ```bib
-@misc{chen2026nitrofusion2,
+@article{chen2026nitrofusion2,
   title={NitroFusion2: Bringing Adversarial Loss to the Text Stream of Multimodal Diffusion Transformers},
-  author={Dar-Yen Chen and Yi-Zhe Song},
-  year={2026},
-  howpublished={\url{https://github.com/ChenDarYen/NitroFusion2}},
-  note={Paper coming soon}
+  author={Chen, Dar-Yen and Song, Yi-Zhe},
+  journal={arXiv preprint arXiv:2611.05648},
+  year={2026}
 }
 ```
