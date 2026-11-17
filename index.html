@@ -111,7 +111,7 @@
 </script>
 <link rel="preload" as="font" type="font/woff2" href="fonts/Spectral-Light.woff2" crossorigin>
 <link rel="preload" as="font" type="font/woff2" href="fonts/WorkSans-Variable.woff2" crossorigin>
-<link rel="stylesheet" href="css/site.css">
+<link rel="stylesheet" href="css/site.css?v=2611b">
 </head>
 <body>
 
@@ -177,7 +177,7 @@
         </a>
       </li>
       <li>
-        <a class="pill" href="https://huggingface.co/spaces/ChenDY/NitroFusion2" target="_blank" rel="noopener">
+        <a class="pill" href="#demo">
           <svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round">
             <circle cx="8" cy="8" r="6.5"/><path d="M6.5 5.2 11 8l-4.5 2.8V5.2Z"/>
           </svg>
@@ -206,6 +206,25 @@
     representation, opening a new direction for adversarial diffusion distillation and
     allowing that discrimination to be steered toward specific aspects.</p>
 </div>
+
+<section class="wrap grid sec" id="demo">
+  <div class="sec-head"><h2>Demo</h2><span class="rule"></span></div>
+  <div class="demo">
+    <p class="demo__lead">Text-to-image and ControlNet in one or two steps, running live on Hugging Face.</p>
+    <p class="demo__actions">
+      <a class="pill demo__run" href="https://huggingface.co/spaces/ChenDY/NitroFusion2" target="_blank" rel="noopener"
+         data-embed="https://chendy-nitrofusion2.hf.space/?__theme=dark&amp;embed=1&amp;example=1">
+        <svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round">
+          <circle cx="8" cy="8" r="6.5"/><path d="M6.5 5.2 11 8l-4.5 2.8V5.2Z"/>
+        </svg>
+        Run the demo
+      </a>
+      <a class="demo__ext" href="https://huggingface.co/spaces/ChenDY/NitroFusion2" target="_blank" rel="noopener">Open in full page&nbsp;&#8599;</a>
+    </p>
+    <p class="demo__note">The demo runs on a shared GPU and can take a moment to wake. If it does not load here, open it in full page.</p>
+    <div class="demo__stage" hidden></div>
+  </div>
+</section>
 
 <section class="wrap grid sec" id="architecture">
   <div class="sec-head"><h2>Architecture</h2><span class="rule"></span></div>
@@ -292,7 +311,7 @@
 {"name": "dragon", "aspect": 1.125, "family": "square", "widths": [400, 600], "lum": 0.127, "p98": 0.651, "sat": 0.243, "vivid": 0.271, "hue": 17.4, "warm": 0.853, "alt": "A gilded dragon standing in a blue-and-white porcelain bowl."}
 ]
 </script>
-<script src="js/site.js"></script>
+<script src="js/site.js?v=2611b"></script>
 <script src="js/river.js"></script>
 </body>
 </html>
